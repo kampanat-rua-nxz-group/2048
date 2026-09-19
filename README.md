@@ -6,7 +6,7 @@ Play it on GitHub Pages at `https://kampanat-rua-nxz-group.github.io/2048/`.
 
 ## How to play
 
-- Use the arrow keys or WASD to slide every tile in one direction.
+- Swipe across the board, or use the arrow keys or WASD, to slide every tile in one direction.
 - Two tiles with the same number merge into one tile with their sum, and the new value is added to your score.
 - After every move that changes the board, a new tile appears: a 2 (90%) or a 4 (10%).
 - Build a 2048 tile to win. You can then keep playing for a higher score.
@@ -19,6 +19,7 @@ Your best score is kept in `localStorage`. If storage is unavailable, it lasts o
 - A hidden live region reads the board state to screen readers after each move.
 - With `prefers-reduced-motion` set, tiles do not scale in and the tray does not tilt.
 - Keys pressed with Ctrl, Cmd, or Alt pass through to the browser.
+- The layout fits the viewport on phones in either orientation, and swipes on the board never scroll or zoom the page.
 
 ## Getting started
 
@@ -45,7 +46,7 @@ npm run dev
 src/
   game/        Pure, immutable game core: rules, board, RNG
   storage/     Best-score persistence
-  ui/          Input, DOM renderer, overlay, screen-reader text
+  ui/          Keyboard and swipe input, DOM renderer, overlay, screen-reader text
   ui/three/    Three.js stage, tiles, renderer, motion, palette
   main.ts      App shell that wires state, input, and rendering
 ```

@@ -21,6 +21,7 @@ Design and plan live in Obsidian: [[2026-09-19-game-2048-design]], [[2026-09-19-
 | `src/game/` | Pure core: `types.ts`, `rules.ts` (line slide/merge, `canMove`, `hasWon`), `board.ts` (`createGame`, `move`, `continueAfterWin`), `rng.ts` |
 | `src/storage/bestScore.ts` | Best score in localStorage; degrades to in-memory on failure |
 | `src/ui/input.ts` | Arrow/WASD binding, ignores modifier keys, respects the lock while a move animates |
+| `src/ui/touch.ts` | Pointer-drag swipes on the board: one move per drag, fired as the threshold is crossed |
 | `src/ui/renderer.ts` | `Renderer` contract + DOM renderer |
 | `src/ui/boardRenderer.ts` | Picks WebGL, falls back to DOM; kind is exposed as `body[data-renderer]` |
 | `src/ui/three/` | `stage`, `tiles`, `threeRenderer`; pure `motion.ts` (easing, tilt) and `palette.ts` |
@@ -47,8 +48,9 @@ The rtk hook mangles `npx`, so use `./node_modules/.bin/<tool>` for direct tool 
 - `SLIDE_MS` (110, `main.ts`) is kept at or above the CSS `--slide-ms` (100ms) so the DOM renderer never snaps mid-transition.
 - The catch blocks in `bestScore.ts` and `boardRenderer.ts` are intended degradations, not swallowed errors.
 - Honor `prefers-reduced-motion`: skip scale animations and tilt.
+- The board owns `touch-action: none`; swipe handling depends on it, so keep the two together.
 - Files ≤300 lines. TDD. Keep Three.js out of the coverage-gated modules.
 
 ## Status
 
-v1 is implemented, reviewed, and has passing tests. Manual QA is still pending: tilt feel, the win overlay (temporarily set `WIN_VALUE=16`), the game-over overlay, macOS Reduce motion, VoiceOver, and Chrome with `--disable-webgl`.
+v1 is implemented, reviewed, and has passing tests. Manual QA is still pending: tilt feel, the win overlay (temporarily set `WIN_VALUE=16`), the game-over overlay, macOS Reduce motion, VoiceOver, and Chrome with `--disable-webgl`. Mobile swipe input and the phone layouts were checked in headless Chromium at phone viewports, both renderers; real-device QA (iOS Safari rubber-banding, Android Chrome) is still pending.

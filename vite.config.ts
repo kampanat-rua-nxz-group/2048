@@ -1,6 +1,8 @@
 import { defineConfig } from 'vitest/config';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  // GitHub Pages serves the project at /2048/; Vercel and local dev serve from the root.
+  base: mode === 'ghpages' ? '/2048/' : '/',
   build: {
     // Three.js alone is ~540 kB minified (~137 kB gzip); keep the warning for anything beyond it.
     chunkSizeWarningLimit: 600,
@@ -14,4 +16,4 @@ export default defineConfig({
       thresholds: { lines: 80, functions: 80, branches: 80, statements: 80 },
     },
   },
-});
+}));

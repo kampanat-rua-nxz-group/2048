@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Build and test output
+dist/
+coverage/
+*.tsbuildinfo
+
+# Environment and local overrides
+.env
+.env.*
+!.env.example
+*.local
+
+# Tooling
+.vercel
+.superpowers/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS and editor
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json

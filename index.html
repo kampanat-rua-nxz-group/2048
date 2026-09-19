@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:," />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..800&display=swap"
+    />
+    <title>2048</title>
+  </head>
+  <body>
+    <main class="game">
+      <header class="game-header">
+        <h1>2048</h1>
+        <dl class="scores">
+          <div class="score"><dt>Score</dt><dd id="score">0</dd></div>
+          <div class="score"><dt>Best</dt><dd id="best">0</dd></div>
+        </dl>
+      </header>
+      <div class="toolbar">
+        <p class="hint">Tilt the tray with the arrow keys or WASD. Tiles with the same number merge.</p>
+        <button id="new-game" type="button">New game</button>
+      </div>
+      <div class="board">
+        <div class="board-view" id="board-view" aria-hidden="true"></div>
+        <div class="overlay" id="overlay" hidden></div>
+      </div>
+      <p class="visually-hidden" id="board-status" aria-live="polite"></p>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

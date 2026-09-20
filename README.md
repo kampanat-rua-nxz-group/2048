@@ -9,8 +9,8 @@ Play it on GitHub Pages at `https://kampanat-rua-nxz-group.github.io/2048/`.
 - Swipe across the board, or use the arrow keys or WASD, to slide every tile in one direction.
 - Two tiles with the same number merge into one tile with their sum, and the new value is added to your score.
 - After every move that changes the board, a new tile appears: at first a 2 (90%) or a 4 (10%).
-- The spawns grow with the board. Reaching 512 starts dropping the occasional 8, 2048 adds 16s, and 8192 adds 32s, so a board that keeps growing keeps filling faster.
 - Build a 2048 tile to win. You can then keep playing for a higher score.
+- Past the win, the spawns grow with the board: a 2048 tile starts dropping the occasional 8, 8192 adds 16s, and 32768 adds 32s, so a board that keeps growing keeps filling faster.
 - The game ends when the board is full and no move can merge anything.
 
 Your best score is kept in `localStorage`. If storage is unavailable, it lasts only for the session.

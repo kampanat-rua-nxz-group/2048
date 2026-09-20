@@ -51,19 +51,19 @@ describe('spawnTile', () => {
     expect(spawnTile(full, 0, sequenceRng([]))).toBeNull();
   });
 
-  it('places an 8 once the board holds a 512, on the roll a small board would read as a 4', () => {
-    const tiles = stateFromGrid([[512, 2, null, null]]).tiles;
+  it('places an 8 once the board holds a 2048, on the roll a smaller board would read as a 4', () => {
+    const tiles = stateFromGrid([[2048, 2, null, null]]).tiles;
     expect(spawnTile(tiles, 7, sequenceRng([0, 0.9]))).toMatchObject({ value: 4 });
     expect(spawnTile(tiles, 7, sequenceRng([0, 0.95]))).toMatchObject({ value: 8 });
   });
 
-  it('places a 16 once the board holds a 2048', () => {
-    const tiles = stateFromGrid([[2048, 2, null, null]]).tiles;
+  it('places a 16 once the board holds an 8192', () => {
+    const tiles = stateFromGrid([[8192, 2, null, null]]).tiles;
     expect(spawnTile(tiles, 7, sequenceRng([0, 0.97]))).toEqual({ id: 7, value: 16, row: 0, col: 2 });
   });
 
-  it('keeps big spawns locked while the board stays small', () => {
-    const tiles = stateFromGrid([[256, 2, null, null]]).tiles;
+  it('keeps big spawns locked until the winning tile shows up', () => {
+    const tiles = stateFromGrid([[1024, 2, null, null]]).tiles;
     expect(spawnTile(tiles, 7, sequenceRng([0, 0.999]))).toMatchObject({ value: 4 });
   });
 });
@@ -138,8 +138,8 @@ describe('move', () => {
   });
 
   it('spawns from the odds the slide leaves behind, not the ones it started with', () => {
-    // The merge lifts the board to 512, which unlocks 8s for this move's spawn.
-    const result = move(stateFromGrid([[256, 256, null, null]]), 'left', sequenceRng([0, 0.95]));
+    // The merge lifts the board to 2048, which unlocks 8s for this move's spawn.
+    const result = move(stateFromGrid([[1024, 1024, null, null]], { keepPlaying: true }), 'left', sequenceRng([0, 0.95]));
     expect(result.events.at(-1)).toMatchObject({ kind: 'spawned', value: 8 });
   });
 

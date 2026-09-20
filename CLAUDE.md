@@ -18,7 +18,7 @@ Design and plan live in Obsidian: [[2026-09-19-game-2048-design]], [[2026-09-19-
 
 | Path | Role |
 |---|---|
-| `src/game/` | Pure core: `types.ts`, `rules.ts` (line slide/merge, `canMove`, `hasWon`), `board.ts` (`createGame`, `move`, `continueAfterWin`), `spawn.ts` (spawn odds, which grow with the largest tile), `rng.ts` |
+| `src/game/` | Pure core: `types.ts`, `rules.ts` (line slide/merge, `canMove`, `hasWon`), `board.ts` (`createGame`, `move`, `continueAfterWin`), `spawn.ts` (spawn odds; 2/4 until the board's largest tile hits 2048, then a ladder unlocking 8, 16, 32), `rng.ts` |
 | `src/storage/bestScore.ts` | Best score in localStorage; degrades to in-memory on failure |
 | `src/ui/input.ts` | Arrow/WASD binding, ignores modifier keys, respects the lock while a move animates |
 | `src/ui/touch.ts` | Pointer-drag swipes on the board: one move per drag, fired as the threshold is crossed |

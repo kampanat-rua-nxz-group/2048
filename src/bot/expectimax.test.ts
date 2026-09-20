@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createGame, slide } from '../game/board';
 import { seededRng } from '../game/rng';
-import { highestTile, spawnOdds } from '../game/spawn';
+import { highestTile, spawnOdds, type SpawnOdds } from '../game/spawn';
 import type { Direction, GameState, Tile } from '../game/types';
 import { chooseMove } from './expectimax';
 import { evaluate, fromTiles } from './position';
@@ -39,13 +39,14 @@ describe('expectimax', () => {
     }
   });
 
-  // Independent one-turn oracle: the real game engine, enumerating every spawn the board allows.
-  function bestByOneTurnOracle(state: GameState): Direction {
+  // Independent one-turn oracle: the real game engine, enumerating every spawn the board
+  // allows. `override` prices the spawns differently, to show what a wrong model would pick.
+  function bestByOneTurnOracle(state: GameState, override?: readonly SpawnOdds[]): Direction {
     const scores = directions.map((direction) => {
       const moved = slide(state, direction);
       if (!moved.changed) return { direction, value: -Infinity };
       const occupied = new Set(moved.state.tiles.map((tile) => tile.row * 4 + tile.col));
-      const odds = spawnOdds(highestTile(moved.state.tiles));
+      const odds = override ?? spawnOdds(highestTile(moved.state.tiles));
       let sum = 0;
       for (let cell = 0; cell < 16; cell += 1) {
         if (occupied.has(cell)) continue;
@@ -69,13 +70,17 @@ describe('expectimax', () => {
   });
 
   it('weighs the bigger spawns a grown board unlocks', () => {
-    // A 2048 on the board makes 8s and 16s possible. Pricing this board at a flat
-    // 90/10 chooses up; the unlocked odds choose right.
-    const tiles = tilesFrom([2048, 64, 256, 32, 512, 8, 2, 64, 8, 256, 512, 2, 4, 8, 0, 2]);
+    // The 2048 here makes 8s possible, and sliding down leaves the board so tight
+    // that an 8 in the gap ends the game. A flat 90/10 cannot see that risk and
+    // picks down; pricing the unlocked 8s picks left instead.
+    const tiles = tilesFrom([512, 4, 2, 64, 32, 512, 16, 2048, 8, 0, 256, 8, 512, 256, 1024, 64]);
     const state: GameState = { tiles, score: 0, nextId: 16, won: true, over: false, keepPlaying: true };
-    expect(spawnOdds(highestTile(tiles)).map((odd) => odd.value)).toEqual([2, 4, 8, 16]);
+    expect(spawnOdds(highestTile(tiles)).map((odd) => odd.value)).toEqual([2, 4, 8]);
+
+    const flat: SpawnOdds[] = [{ value: 2, probability: 0.9 }, { value: 4, probability: 0.1 }];
+    expect(bestByOneTurnOracle(state, flat)).toBe('down');
     const expected = bestByOneTurnOracle(state);
-    expect(expected).toBe('right');
+    expect(expected).toBe('left');
     expect(chooseMove(tiles, { maxDepth: 1, timeMs: Infinity }).direction).toBe(expected);
   });
 });

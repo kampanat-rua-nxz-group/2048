@@ -8,12 +8,13 @@ const FOUR_PROBABILITY = 0.1;
 
 /**
  * Each rung unlocks a bigger spawn value once the board's largest tile reaches it,
- * so a board that keeps growing keeps filling with tiles worth merging.
+ * so a board that keeps growing keeps filling with tiles worth merging. The first
+ * rung sits at the winning tile: play up to 2048 keeps the classic 2/4 spawns.
  */
 const LADDER: readonly { readonly unlockedAt: number; readonly value: number; readonly probability: number }[] = [
-  { unlockedAt: 512, value: 8, probability: 0.08 },
-  { unlockedAt: 2048, value: 16, probability: 0.04 },
-  { unlockedAt: 8192, value: 32, probability: 0.02 },
+  { unlockedAt: 2048, value: 8, probability: 0.08 },
+  { unlockedAt: 8192, value: 16, probability: 0.04 },
+  { unlockedAt: 32768, value: 32, probability: 0.02 },
 ];
 
 export function highestTile(tiles: readonly Tile[]): number {

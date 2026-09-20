@@ -50,6 +50,22 @@ describe('spawnTile', () => {
     expect(emptyCells(full)).toEqual([]);
     expect(spawnTile(full, 0, sequenceRng([]))).toBeNull();
   });
+
+  it('places an 8 once the board holds a 512, on the roll a small board would read as a 4', () => {
+    const tiles = stateFromGrid([[512, 2, null, null]]).tiles;
+    expect(spawnTile(tiles, 7, sequenceRng([0, 0.9]))).toMatchObject({ value: 4 });
+    expect(spawnTile(tiles, 7, sequenceRng([0, 0.95]))).toMatchObject({ value: 8 });
+  });
+
+  it('places a 16 once the board holds a 2048', () => {
+    const tiles = stateFromGrid([[2048, 2, null, null]]).tiles;
+    expect(spawnTile(tiles, 7, sequenceRng([0, 0.97]))).toEqual({ id: 7, value: 16, row: 0, col: 2 });
+  });
+
+  it('keeps big spawns locked while the board stays small', () => {
+    const tiles = stateFromGrid([[256, 2, null, null]]).tiles;
+    expect(spawnTile(tiles, 7, sequenceRng([0, 0.999]))).toMatchObject({ value: 4 });
+  });
 });
 
 describe('move', () => {
@@ -119,6 +135,12 @@ describe('move', () => {
   it('does not emit moved events for tiles that stay put', () => {
     const result = move(stateFromGrid([[2, null, null, 4]]), 'left', spawnFirstEmptyAsTwo());
     expect(result.events.filter((e) => e.kind === 'moved')).toEqual([{ kind: 'moved', id: 3, toRow: 0, toCol: 1 }]);
+  });
+
+  it('spawns from the odds the slide leaves behind, not the ones it started with', () => {
+    // The merge lifts the board to 512, which unlocks 8s for this move's spawn.
+    const result = move(stateFromGrid([[256, 256, null, null]]), 'left', sequenceRng([0, 0.95]));
+    expect(result.events.at(-1)).toMatchObject({ kind: 'spawned', value: 8 });
   });
 
   it('sets won when a tile reaches 2048', () => {

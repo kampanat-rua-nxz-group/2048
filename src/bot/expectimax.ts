@@ -1,5 +1,19 @@
+import { spawnOdds } from '../game/spawn';
 import type { Direction, Tile } from '../game/types';
 import { DIRECTIONS, evaluate, fromTiles, slidePosition, type Position } from './position';
+
+type SpawnRank = { readonly rank: number; readonly probability: number };
+
+/** Spawn odds as log2 ranks, keyed by the board's largest rank. Shared across searches. */
+const spawnRanks = new Map<number, readonly SpawnRank[]>();
+
+function ranksFor(highestRank: number): readonly SpawnRank[] {
+  const cached = spawnRanks.get(highestRank);
+  if (cached !== undefined) return cached;
+  const ranks = spawnOdds(2 ** highestRank).map(({ value, probability }) => ({ rank: Math.log2(value), probability }));
+  spawnRanks.set(highestRank, ranks);
+  return ranks;
+}
 
 export type SearchOptions = { readonly timeMs?: number; readonly maxDepth?: number };
 export type SearchResult = { readonly direction: Direction | null; readonly depth: number; readonly nodes: number };
@@ -47,14 +61,17 @@ export function chooseMove(tiles: readonly Tile[], options: SearchOptions = {}):
     checkTime();
     let total = 0;
     let empty = 0;
+    let highestRank = 0;
+    for (let i = 0; i < 16; i += 1) if (position[i]! > highestRank) highestRank = position[i]!;
+    const ranks = ranksFor(highestRank);
     const spawned = [...position];
     for (let i = 0; i < 16; i += 1) {
       if (position[i] !== 0) continue;
       empty += 1;
-      spawned[i] = 1;
-      total += 0.9 * player(spawned, depth);
-      spawned[i] = 2;
-      total += 0.1 * player(spawned, depth);
+      for (const { rank, probability } of ranks) {
+        spawned[i] = rank;
+        total += probability * player(spawned, depth);
+      }
       spawned[i] = 0;
     }
     return empty === 0 ? player(position, depth) : total / empty;

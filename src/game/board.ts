@@ -1,9 +1,9 @@
 import { canMove, hasWon, slideLine } from './rules';
 import type { Rng } from './rng';
+import { highestTile, spawnOdds, spawnValue } from './spawn';
 import { SIZE, type Cell, type Direction, type GameState, type MoveEvent, type MoveResult, type Tile } from './types';
 
 const INDICES = Array.from({ length: SIZE }, (_, i) => i);
-const FOUR_PROBABILITY = 0.1;
 
 export function emptyCells(tiles: readonly Tile[]): Cell[] {
   const taken = new Set(tiles.map((t) => `${t.row},${t.col}`));
@@ -12,12 +12,12 @@ export function emptyCells(tiles: readonly Tile[]): Cell[] {
   );
 }
 
-/** Picks a uniformly random empty cell (first rng call) and a value: 2 or 4 (second rng call). */
+/** Picks a uniformly random empty cell (first rng call) and a value (second rng call). */
 export function spawnTile(tiles: readonly Tile[], id: number, rng: Rng): Tile | null {
   const empty = emptyCells(tiles);
   if (empty.length === 0) return null;
   const cell = empty[Math.floor(rng() * empty.length)]!;
-  const value = rng() < 1 - FOUR_PROBABILITY ? 2 : 4;
+  const value = spawnValue(spawnOdds(highestTile(tiles)), rng());
   return { id, value, row: cell.row, col: cell.col };
 }
 

@@ -18,7 +18,7 @@ Design and plan live in Obsidian: [[2026-09-19-game-2048-design]], [[2026-09-19-
 
 | Path | Role |
 |---|---|
-| `src/game/` | Pure core: `types.ts`, `rules.ts` (line slide/merge, `canMove`, `hasWon`), `board.ts` (`createGame`, `move`, `continueAfterWin`), `rng.ts` |
+| `src/game/` | Pure core: `types.ts`, `rules.ts` (line slide/merge, `canMove`, `hasWon`), `board.ts` (`createGame`, `move`, `continueAfterWin`), `spawn.ts` (spawn odds, which grow with the largest tile), `rng.ts` |
 | `src/storage/bestScore.ts` | Best score in localStorage; degrades to in-memory on failure |
 | `src/ui/input.ts` | Arrow/WASD binding, ignores modifier keys, respects the lock while a move animates |
 | `src/ui/touch.ts` | Pointer-drag swipes on the board: one move per drag, fired as the threshold is crossed |
@@ -44,6 +44,7 @@ The rtk hook mangles `npx`, so use `./node_modules/.bin/<tool>` for direct tool 
 
 - The game core stays pure and immutable: every move returns a new `GameState` plus events, and nothing mutates.
 - Renderers consume `MoveEvent`s by tile id and must not reach into game logic.
+- Spawn odds live only in `spawn.ts`. The bot's chance nodes read them from there, so the search never drifts from what the board actually does.
 - Palette hex values exist in both `palette.ts` and `styles.css`, on purpose: the DOM fallback needs the same colors and CSS can't import TS. Edit both.
 - `SLIDE_MS` (110, `main.ts`) is kept at or above the CSS `--slide-ms` (100ms) so the DOM renderer never snaps mid-transition.
 - The catch blocks in `bestScore.ts` and `boardRenderer.ts` are intended degradations, not swallowed errors.

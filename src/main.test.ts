@@ -63,6 +63,25 @@ afterEach(() => {
 });
 
 describe('bot integration', () => {
+  it('lets a swipe take over from autoplay and ignores the pending bot answer', async () => {
+    fixture.values = [2, 2, ...Array<number>(14).fill(0)];
+    await import('./main');
+    button().click();
+    const worker = SearchWorker.latest;
+    const board = document.querySelector('.board')!;
+    board.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 1, clientX: 100, clientY: 100 }));
+    board.dispatchEvent(new PointerEvent('pointermove', { pointerId: 1, clientX: 50, clientY: 100 }));
+    board.dispatchEvent(new PointerEvent('pointerup', { pointerId: 1, clientX: 50, clientY: 100 }));
+    await vi.advanceTimersByTimeAsync(110);
+    expect(worker.terminated).toBe(true);
+    expect(button().getAttribute('aria-pressed')).toBe('false');
+    expect(document.querySelector('#score')!.textContent).toBe('4');
+    const description = document.querySelector('#board-status')!.textContent;
+    await worker.reply('right');
+    await vi.advanceTimersByTimeAsync(110);
+    expect(document.querySelector('#board-status')!.textContent).toBe(description);
+  });
+
   it('merges to 2048, skips the win dialog, and searches the continued game', async () => {
     fixture.values = [1024, 1024, ...Array<number>(14).fill(0)];
     await import('./main');

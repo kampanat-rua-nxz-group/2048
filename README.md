@@ -6,7 +6,7 @@ Play it on GitHub Pages at `https://kampanat-rua-nxz-group.github.io/2048/`.
 
 ## How to play
 
-- Use the arrow keys or WASD to slide every tile in one direction.
+- Swipe across the board, or use the arrow keys or WASD, to slide every tile in one direction.
 - Two tiles with the same number merge into one tile with their sum, and the new value is added to your score.
 - After every move that changes the board, a new tile appears: a 2 (90%) or a 4 (10%).
 - Build a 2048 tile to win. You can then keep playing for a higher score.
@@ -16,7 +16,7 @@ Your best score is kept in `localStorage`. If storage is unavailable, it lasts o
 
 ## Bot
 
-Bot controls are invisible but remain clickable in their original position: the left side of the row between the New game toolbar and the board. Click there to start or stop the bot. It keeps playing beyond 2048 and stops at game over. An arrow/WASD key or **New game** also cancels it. A move already animating finishes before manual play resumes.
+Bot controls are invisible but remain clickable in their original position: the left side of the row between the New game toolbar and the board. Click there to start or stop the bot. It keeps playing beyond 2048 and stops at game over. A swipe, an arrow/WASD key, or **New game** also cancels it. A move already animating finishes before manual play resumes.
 
 The bot uses Expectimax: it considers all legal moves and averages the possible new tiles using the game's 90%/10% spawn probabilities. It searches progressively deeper with a 150 ms thinking budget per move, up to six moves ahead, and keeps the last completed search if time runs out. Cached row calculations and repeated positions reduce work. Its board evaluation rewards empty spaces, merge opportunities, and rows/columns ordered toward an edge. Search runs in a Web Worker so the controls remain responsive; it never reads future random values.
 
@@ -35,6 +35,7 @@ The benchmark reports score, largest tile, moves, average completed depth, and t
 - A hidden live region reads the board state to screen readers after each move.
 - With `prefers-reduced-motion` set, tiles do not scale in and the tray does not tilt.
 - Keys pressed with Ctrl, Cmd, or Alt pass through to the browser.
+- The layout fits the viewport on phones in either orientation, and swipes on the board never scroll or zoom the page.
 
 ## Getting started
 
@@ -63,7 +64,7 @@ src/
   game/        Pure, immutable game core: rules, board, RNG
   bot/         Expectimax search, cached positions, worker, autoplay controller
   storage/     Best-score persistence
-  ui/          Input, DOM renderer, overlay, screen-reader text
+  ui/          Keyboard and swipe input, DOM renderer, overlay, screen-reader text
   ui/three/    Three.js stage, tiles, renderer, motion, palette
   main.ts      App shell that wires state, input, and rendering
 ```

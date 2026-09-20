@@ -7,6 +7,7 @@ import { loadBestScore, saveBestScore } from './storage/bestScore';
 import { describeBoard } from './ui/boardDescription';
 import { createBoardRenderer } from './ui/boardRenderer';
 import { bindInput } from './ui/input';
+import { bindSwipeInput } from './ui/touch';
 import { createOverlay, overlayFor } from './ui/overlay';
 import { NUMERAL_FONT } from './ui/three/tiles';
 
@@ -103,16 +104,20 @@ async function handleMove(dir: Direction): Promise<void> {
   if (next !== null) overlay.show(next);
 }
 
-bindInput(window, () => {
-  // A manual direction cancels pending search even while a tile is sliding.
-  if (bot.isRunning()) bot.stop();
-  return renderer.isAnimating();
-}, (dir) => {
+function requestMove(dir: Direction): void {
   handleMove(dir).catch((error: unknown) => {
     reportError(error);
     renderer.reset(state);
   });
-});
+}
+
+const isLocked = () => {
+  // A manual direction cancels pending search even while a tile is sliding.
+  if (bot.isRunning()) bot.stop();
+  return renderer.isAnimating();
+};
+bindInput(window, isLocked, requestMove);
+bindSwipeInput(requireElement('.board'), isLocked, requestMove);
 botButton.addEventListener('click', () => {
   if (bot.isRunning()) bot.stop();
   else bot.start();

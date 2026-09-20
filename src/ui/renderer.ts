@@ -1,4 +1,5 @@
 import { WIN_VALUE, type Direction, type GameState, type MoveEvent } from '../game/types';
+import type { Theme } from './three/palette';
 
 export type Renderer = {
   /** Clears the board and draws every tile in state. Abandons any in-flight apply. */
@@ -6,6 +7,8 @@ export type Renderer = {
   /** Animates one move's events; resolves when the slide and follow-up changes are done. `dir` drives optional effects. */
   apply(events: readonly MoveEvent[], dir?: Direction): Promise<void>;
   isAnimating(): boolean;
+  /** Recolors live tiles. Omitted by the DOM renderer, which reads the theme's CSS variables. */
+  setTheme?(theme: Theme): void;
 };
 
 export type RendererOptions = { readonly slideMs: number };

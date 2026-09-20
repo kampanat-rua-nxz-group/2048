@@ -1,9 +1,14 @@
 import { SIZE } from '../game/types';
+import type { Theme } from './three/palette';
 import { createRenderer, type Renderer } from './renderer';
 import { createThreeRenderer } from './three/threeRenderer';
 
 export type BoardRendererKind = 'webgl' | 'dom';
-export type BoardRendererOptions = { readonly slideMs: number; readonly reducedMotion: boolean };
+export type BoardRendererOptions = {
+  readonly slideMs: number;
+  readonly reducedMotion: boolean;
+  readonly theme: Theme;
+};
 
 function createDomBoard(host: HTMLElement, options: BoardRendererOptions): Renderer {
   const doc = host.ownerDocument;

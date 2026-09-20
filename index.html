@@ -23,7 +23,13 @@
       </header>
       <div class="toolbar">
         <p class="hint">Swipe the tray, or tilt it with the arrow keys or WASD. Tiles with the same number merge.</p>
-        <button id="new-game" type="button">New game</button>
+        <div class="controls">
+          <span class="theme-picker">
+            <label for="theme">Theme</label>
+            <select id="theme"></select>
+          </span>
+          <button id="new-game" type="button">New game</button>
+        </div>
       </div>
       <div class="bot-toolbar">
         <button id="toggle-bot" type="button" aria-pressed="false" aria-describedby="bot-status">Start bot</button>

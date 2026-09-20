@@ -16,7 +16,7 @@ Your best score is kept in `localStorage`. If storage is unavailable, it lasts o
 
 ## Themes
 
-The picker in the toolbar, beside **New game**, recolors the whole game — page, tray, tiles, and overlay — in both renderers: Ceramic (the default), Midnight, Ocean, and Blossom. The choice is kept in `localStorage` and restored on the next visit; without storage it lasts for the session.
+The picker in the toolbar, beside **New game**, wears a swatch of the ramp it is showing and recolors the whole game — page, tray, tiles, and overlay — in both renderers: Ceramic (the default), Midnight, Ocean, and Blossom. The choice is kept in `localStorage` and restored on the next visit; without storage it lasts for the session.
 
 Each theme is a set of surfaces plus an eleven-step tile ramp in `src/ui/three/palette.ts`. Numeral ink is not hand-picked: whichever of a theme's two inks has more contrast against a tile wins, and a test holds every value in every theme at a WCAG contrast ratio of 3:1 or better. `applyTheme()` writes the theme to the page as CSS custom properties, so the DOM board follows along; the WebGL renderer repaints its materials in place.
 

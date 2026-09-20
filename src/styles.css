@@ -74,13 +74,39 @@ body {
 .score dt { font-size: 14px; font-weight: 500; }
 .score dd { margin: 0; font-size: 28px; font-weight: 800; }
 
-.toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 20px 0 16px; }
-.hint { margin: 0; max-width: 34ch; font-size: 15px; line-height: 1.4; }
-.controls { display: flex; align-items: center; gap: 10px; }
+/* Hint above, controls below: the theme picker and New game need a row of their own at every width. */
+.toolbar { display: grid; gap: 12px; margin: 20px 0 16px; }
+.hint { margin: 0; font-size: 15px; line-height: 1.4; }
+.controls { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 
-.theme-picker { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; }
+/* The picker wears a swatch of the current ramp and its own chevron, so it reads as colors without a label. */
+.theme-picker { position: relative; display: inline-flex; }
+.theme-picker::before,
+.theme-picker::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  pointer-events: none;
+}
+.theme-picker::before {
+  left: 14px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--tile-8) 50%, var(--tile-1024) 50%);
+  transform: translateY(-50%);
+}
+.theme-picker::after {
+  right: 15px;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid var(--paper);
+  border-bottom: 2px solid var(--paper);
+  transform: translateY(-70%) rotate(45deg);
+}
 .theme-picker select {
-  padding: 10px 12px;
+  appearance: none;
+  padding: 12px 32px 12px 36px;
   min-height: 44px;
   border: 0;
   border-radius: var(--radius);
@@ -91,6 +117,8 @@ body {
   cursor: pointer;
 }
 .theme-picker select:hover { background: var(--well); }
+/* The dropdown list is the platform's own; keep it on theme where browsers allow it. */
+.theme-picker option { background: var(--tray); color: var(--paper); }
 
 button {
   padding: 12px 18px;
@@ -204,9 +232,9 @@ button:disabled { opacity: 0.55; cursor: default; }
 }
 
 @media (max-width: 420px) {
-  .toolbar { flex-direction: column; align-items: stretch; gap: 12px; }
-  .controls { justify-content: space-between; }
-  .hint { max-width: none; }
+  /* Two equal, full-width controls: both stay comfortably tappable on a narrow screen. */
+  .controls { display: grid; grid-template-columns: 1fr 1fr; }
+  .theme-picker select, .controls button { width: 100%; }
   .scores { gap: 14px; }
   .score dd { font-size: 24px; }
 }
@@ -227,8 +255,8 @@ button:disabled { opacity: 0.55; cursor: default; }
   .game-header h1 { font-size: clamp(30px, 13vh, 64px); }
   .scores { gap: 20px; }
   .score { text-align: left; }
-  .toolbar { grid-area: 2 / 1; flex-direction: column; align-items: flex-start; margin: 12px 0 0; }
-  .controls { flex-wrap: wrap; }
+  .toolbar { grid-area: 2 / 1; justify-items: start; margin: 12px 0 0; }
+  .controls { flex-wrap: wrap; justify-content: flex-start; }
   .bot-toolbar { grid-area: 3 / 1; margin: 12px 0 0; }
   .hint { font-size: 13px; }
   .board { grid-area: 1 / 2 / 4 / 3; }

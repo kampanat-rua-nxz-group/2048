@@ -4,11 +4,14 @@ import { continueAfterWin, createGame, move } from './game/board';
 import { defaultRng } from './game/rng';
 import type { Direction, GameState } from './game/types';
 import { loadBestScore, saveBestScore } from './storage/bestScore';
+import { loadThemeId, saveThemeId } from './storage/themePreference';
 import { describeBoard } from './ui/boardDescription';
 import { createBoardRenderer } from './ui/boardRenderer';
 import { bindInput } from './ui/input';
 import { bindSwipeInput } from './ui/touch';
 import { createOverlay, overlayFor } from './ui/overlay';
+import { applyTheme, createThemePicker } from './ui/theme';
+import { DEFAULT_THEME, themeById, type Theme } from './ui/three/palette';
 import { NUMERAL_FONT } from './ui/three/tiles';
 
 const SLIDE_MS = 110;
@@ -32,7 +35,9 @@ const scoreEl = requireElement('#score');
 const bestEl = requireElement('#best');
 const statusEl = requireElement('#board-status');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const { renderer, kind } = createBoardRenderer(requireElement('#board-view'), { slideMs: SLIDE_MS, reducedMotion });
+let theme: Theme = themeById(loadThemeId()) ?? DEFAULT_THEME;
+applyTheme(document.documentElement, theme);
+const { renderer, kind } = createBoardRenderer(requireElement('#board-view'), { slideMs: SLIDE_MS, reducedMotion, theme });
 document.body.dataset.renderer = kind;
 const overlay = createOverlay(requireElement('#overlay'), { onNewGame: newGame, onKeepGoing: keepGoing });
 
@@ -123,4 +128,11 @@ botButton.addEventListener('click', () => {
   else bot.start();
 });
 requireElement('#new-game').addEventListener('click', newGame);
+createThemePicker(requireElement('#theme') as HTMLSelectElement, theme, (picked) => {
+  theme = picked;
+  applyTheme(document.documentElement, theme);
+  // The DOM board follows the CSS variables; the WebGL tray has to be repainted.
+  renderer.setTheme?.(theme);
+  saveThemeId(theme.id);
+});
 newGame();

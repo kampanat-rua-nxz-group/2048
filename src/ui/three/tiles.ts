@@ -1,6 +1,6 @@
 import { CanvasTexture, Group, Mesh, MeshStandardMaterial, PlaneGeometry, SRGBColorSpace } from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { tileColors } from './palette';
+import { tileColors, type Theme } from './palette';
 
 export const TILE_HEIGHT = 0.34;
 export const NUMERAL_FONT = 'Archivo';
@@ -8,6 +8,8 @@ const TEXTURE_PX = 256;
 
 export type TileFactory = {
   create(value: number): Group;
+  /** Recolors every cached material, so tiles already on the tray change with it. */
+  setTheme(theme: Theme): void;
   dispose(): void;
 };
 
@@ -31,7 +33,8 @@ function numeralTexture(value: number, ink: string): CanvasTexture {
 }
 
 /** Builds tile meshes; geometry is shared and materials are cached per value. */
-export function createTileFactory(): TileFactory {
+export function createTileFactory(theme: Theme): TileFactory {
+  let current = theme;
   const bodyGeometry = new RoundedBoxGeometry(0.94, TILE_HEIGHT, 0.94, 4, 0.12);
   const faceGeometry = new PlaneGeometry(0.86, 0.86);
   const materials = new Map<number, { body: MeshStandardMaterial; face: MeshStandardMaterial }>();
@@ -39,7 +42,7 @@ export function createTileFactory(): TileFactory {
   const materialsFor = (value: number) => {
     const cached = materials.get(value);
     if (cached !== undefined) return cached;
-    const { body, ink } = tileColors(value);
+    const { body, ink } = tileColors(value, current);
     const created = {
       body: new MeshStandardMaterial({ color: body, roughness: 0.42, metalness: 0.02 }),
       face: new MeshStandardMaterial({ map: numeralTexture(value, ink), transparent: true, roughness: 0.6 }),
@@ -62,6 +65,17 @@ export function createTileFactory(): TileFactory {
       group.add(bodyMesh, faceMesh);
       return group;
     },
+    setTheme(next) {
+      current = next;
+      for (const [value, material] of materials) {
+        const { body, ink } = tileColors(value, current);
+        material.body.color.set(body);
+        material.face.map?.dispose();
+        material.face.map = numeralTexture(value, ink);
+        material.face.needsUpdate = true;
+      }
+    },
+
     dispose() {
       bodyGeometry.dispose();
       faceGeometry.dispose();

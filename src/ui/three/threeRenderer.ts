@@ -2,10 +2,15 @@ import type { Group } from 'three';
 import type { Direction, GameState, MoveEvent } from '../../game/types';
 import type { Renderer } from '../renderer';
 import { appearScale, cellToWorld, easeOutCubic, lerpPoint, popScale, tiltFor, tiltPoint, type Point } from './motion';
+import type { Theme } from './palette';
 import { createStage } from './stage';
 import { createTileFactory } from './tiles';
 
-export type ThreeRendererOptions = { readonly slideMs: number; readonly reducedMotion: boolean };
+export type ThreeRendererOptions = {
+  readonly slideMs: number;
+  readonly reducedMotion: boolean;
+  readonly theme: Theme;
+};
 export type ThreeRenderer = Renderer & { dispose(): void };
 
 /** Returns true when finished. */
@@ -20,8 +25,8 @@ const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, 
 
 /** Throws when WebGL is unavailable. */
 export function createThreeRenderer(host: HTMLElement, options: ThreeRendererOptions): ThreeRenderer {
-  const stage = createStage(host);
-  const factory = createTileFactory();
+  const stage = createStage(host, options.theme);
+  const factory = createTileFactory(options.theme);
   const slideMs = options.reducedMotion ? 0 : options.slideMs;
   const popMs = options.reducedMotion ? 0 : POP_MS;
   const appearMs = options.reducedMotion ? 0 : APPEAR_MS;
@@ -148,6 +153,12 @@ export function createThreeRenderer(host: HTMLElement, options: ThreeRendererOpt
     },
 
     isAnimating: () => animating,
+
+    setTheme(theme: Theme) {
+      stage.setTheme(theme);
+      factory.setTheme(theme);
+      stage.render();
+    },
 
     dispose() {
       generation += 1;

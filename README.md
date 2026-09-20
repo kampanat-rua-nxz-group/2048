@@ -14,6 +14,12 @@ Play it on GitHub Pages at `https://kampanat-rua-nxz-group.github.io/2048/`.
 
 Your best score is kept in `localStorage`. If storage is unavailable, it lasts only for the session.
 
+## Themes
+
+The picker in the toolbar, beside **New game**, wears a swatch of the ramp it is showing and recolors the whole game — page, tray, tiles, and overlay — in both renderers: Ceramic (the default), Midnight, Ocean, and Blossom. The choice is kept in `localStorage` and restored on the next visit; without storage it lasts for the session.
+
+Each theme is a set of surfaces plus an eleven-step tile ramp in `src/ui/three/palette.ts`. Numeral ink is not hand-picked: whichever of a theme's two inks has more contrast against a tile wins, and a test holds every value in every theme at a WCAG contrast ratio of 3:1 or better. `applyTheme()` writes the theme to the page as CSS custom properties, so the DOM board follows along; the WebGL renderer repaints its materials in place.
+
 ## Bot
 
 Bot controls are invisible but remain clickable in their original position: the left side of the row between the New game toolbar and the board. Click there to start or stop the bot. It keeps playing beyond 2048 and stops at game over. A swipe, an arrow/WASD key, or **New game** also cancels it. A move already animating finishes before manual play resumes.
@@ -63,9 +69,9 @@ npm run dev
 src/
   game/        Pure, immutable game core: rules, board, RNG
   bot/         Expectimax search, cached positions, worker, autoplay controller
-  storage/     Best-score persistence
-  ui/          Keyboard and swipe input, DOM renderer, overlay, screen-reader text
-  ui/three/    Three.js stage, tiles, renderer, motion, palette
+  storage/     Best-score and theme persistence
+  ui/          Keyboard and swipe input, DOM renderer, overlay, theme picker, screen-reader text
+  ui/three/    Three.js stage, tiles, renderer, motion, palette and themes
   main.ts      App shell that wires state, input, and rendering
 ```
 

@@ -1,15 +1,8 @@
+import { browserStorage, type StorageLike } from './browserStorage';
+
 export const BEST_SCORE_KEY = 'game-2048:best-score';
 
-export type StorageLike = Pick<Storage, 'getItem' | 'setItem'>;
-
-function browserStorage(): StorageLike | null {
-  try {
-    return globalThis.localStorage ?? null;
-  } catch {
-    // Accessing localStorage throws in some privacy modes; treat as unavailable.
-    return null;
-  }
-}
+export type { StorageLike };
 
 export function loadBestScore(storage: StorageLike | null = browserStorage()): number {
   if (storage === null) return 0;

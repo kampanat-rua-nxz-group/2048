@@ -9,6 +9,8 @@ export default defineConfig(({ mode }) => ({
   },
   test: {
     environment: 'node',
+    // Let `?raw` imports of styles.css through, so tests can check CSS against the palette.
+    css: true,
     coverage: {
       provider: 'v8',
       include: ['src/game/**/*.ts', 'src/bot/**/*.ts', 'src/storage/**/*.ts', 'src/ui/three/motion.ts', 'src/ui/three/palette.ts'],

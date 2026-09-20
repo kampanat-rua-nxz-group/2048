@@ -19,12 +19,13 @@ Design and plan live in Obsidian: [[2026-09-19-game-2048-design]], [[2026-09-19-
 | Path | Role |
 |---|---|
 | `src/game/` | Pure core: `types.ts`, `rules.ts` (line slide/merge, `canMove`, `hasWon`), `board.ts` (`createGame`, `move`, `continueAfterWin`), `rng.ts` |
-| `src/storage/bestScore.ts` | Best score in localStorage; degrades to in-memory on failure |
+| `src/storage/` | `browserStorage.ts` (localStorage or null), `bestScore.ts`, `themePreference.ts`; all degrade to in-memory on failure |
 | `src/ui/input.ts` | Arrow/WASD binding, ignores modifier keys, respects the lock while a move animates |
 | `src/ui/touch.ts` | Pointer-drag swipes on the board: one move per drag, fired as the threshold is crossed |
 | `src/ui/renderer.ts` | `Renderer` contract + DOM renderer |
 | `src/ui/boardRenderer.ts` | Picks WebGL, falls back to DOM; kind is exposed as `body[data-renderer]` |
-| `src/ui/three/` | `stage`, `tiles`, `threeRenderer`; pure `motion.ts` (easing, tilt) and `palette.ts` |
+| `src/ui/theme.ts` | Applies a theme as CSS custom properties; builds the theme `<select>` |
+| `src/ui/three/` | `stage`, `tiles`, `threeRenderer`; pure `motion.ts` (easing, tilt) and `palette.ts` (themes, tile ramps, contrast) |
 | `src/ui/overlay.ts`, `boardDescription.ts` | Win/over overlay; screen-reader board text |
 | `src/main.ts` | App shell: wires state, input, renderer, overlay, and score |
 
@@ -44,7 +45,9 @@ The rtk hook mangles `npx`, so use `./node_modules/.bin/<tool>` for direct tool 
 
 - The game core stays pure and immutable: every move returns a new `GameState` plus events, and nothing mutates.
 - Renderers consume `MoveEvent`s by tile id and must not reach into game logic.
-- Palette hex values exist in both `palette.ts` and `styles.css`, on purpose: the DOM fallback needs the same colors and CSS can't import TS. Edit both.
+- Themes live in `palette.ts`. A theme is surfaces plus an eleven-step ramp; numeral ink is picked by contrast, never by hand, and a test keeps every tile at 3:1 or better.
+- The `:root` block in `styles.css` repeats the default theme's hex, on purpose: the page paints before JS runs and CSS can't import TS. `applyTheme()` overwrites those variables at runtime, and a palette test compares the two. Edit both.
+- Recoloring reaches both renderers: the DOM board reads the CSS variables, the WebGL renderer repaints its stage and cached tile materials in `setTheme`.
 - `SLIDE_MS` (110, `main.ts`) is kept at or above the CSS `--slide-ms` (100ms) so the DOM renderer never snaps mid-transition.
 - The catch blocks in `bestScore.ts` and `boardRenderer.ts` are intended degradations, not swallowed errors.
 - Honor `prefers-reduced-motion`: skip scale animations and tilt.
@@ -54,4 +57,4 @@ The rtk hook mangles `npx`, so use `./node_modules/.bin/<tool>` for direct tool 
 
 ## Status
 
-v1 is implemented, reviewed, and has passing tests. Manual QA is still pending: tilt feel, the win overlay (temporarily set `WIN_VALUE=16`), the game-over overlay, macOS Reduce motion, VoiceOver, and Chrome with `--disable-webgl`. Mobile swipe input and the phone layouts were checked in headless Chromium at phone viewports, both renderers; real-device QA (iOS Safari rubber-banding, Android Chrome) is still pending.
+v1 is implemented, reviewed, and has passing tests. Manual QA is still pending: tilt feel, the win overlay (temporarily set `WIN_VALUE=16`), the game-over overlay, macOS Reduce motion, VoiceOver, and Chrome with `--disable-webgl`. Theme switching was checked in headless Chromium on both renderers (all four themes, reload, and persistence); the overlay and high-value tiles under each theme have not been seen on a real device. Mobile swipe input and the phone layouts were checked in headless Chromium at phone viewports, both renderers; real-device QA (iOS Safari rubber-banding, Android Chrome) is still pending.

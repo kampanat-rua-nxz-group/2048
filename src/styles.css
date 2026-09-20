@@ -185,8 +185,9 @@ button:disabled { opacity: 0.55; cursor: default; }
   .scores { gap: 20px; }
   .score { text-align: left; }
   .toolbar { grid-area: 2 / 1; flex-direction: column; align-items: flex-start; margin: 12px 0 0; }
+  .bot-toolbar { grid-area: 3 / 1; margin: 12px 0 0; }
   .hint { font-size: 13px; }
-  .board { grid-area: 1 / 2 / 3 / 3; }
+  .board { grid-area: 1 / 2 / 4 / 3; }
   .overlay { gap: 12px; }
 }
 

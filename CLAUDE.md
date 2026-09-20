@@ -49,6 +49,7 @@ The rtk hook mangles `npx`, so use `./node_modules/.bin/<tool>` for direct tool 
 - The catch blocks in `bestScore.ts` and `boardRenderer.ts` are intended degradations, not swallowed errors.
 - Honor `prefers-reduced-motion`: skip scale animations and tilt.
 - The board owns `touch-action: none`; swipe handling depends on it, so keep the two together.
+- Swipes bind to `#board-view`, not `.board`, so drags on the overlay's buttons never steer the tray.
 - Files ≤300 lines. TDD. Keep Three.js out of the coverage-gated modules.
 
 ## Status

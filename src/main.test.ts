@@ -68,10 +68,10 @@ describe('bot integration', () => {
     await import('./main');
     button().click();
     const worker = SearchWorker.latest;
-    const board = document.querySelector('.board')!;
-    board.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 1, clientX: 100, clientY: 100 }));
-    board.dispatchEvent(new PointerEvent('pointermove', { pointerId: 1, clientX: 50, clientY: 100 }));
-    board.dispatchEvent(new PointerEvent('pointerup', { pointerId: 1, clientX: 50, clientY: 100 }));
+    const board = document.querySelector('#board-view')!;
+    board.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 1, clientX: 100, clientY: 100 }));
+    board.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerId: 1, clientX: 50, clientY: 100 }));
+    board.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1, clientX: 50, clientY: 100 }));
     await vi.advanceTimersByTimeAsync(110);
     expect(worker.terminated).toBe(true);
     expect(button().getAttribute('aria-pressed')).toBe('false');
@@ -80,6 +80,19 @@ describe('bot integration', () => {
     await worker.reply('right');
     await vi.advanceTimersByTimeAsync(110);
     expect(document.querySelector('#board-status')!.textContent).toBe(description);
+  });
+
+  it('does not treat an overlay button drag as a board swipe', async () => {
+    fixture.values = [2, 2, ...Array<number>(14).fill(0)];
+    await import('./main');
+    overlay().hidden = false;
+    const action = overlay().querySelector('button')!;
+    const before = document.querySelector('#board-status')!.textContent;
+    action.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 1, clientX: 100, clientY: 100 }));
+    action.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerId: 1, clientX: 50, clientY: 100 }));
+    action.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1, clientX: 50, clientY: 100 }));
+    await vi.advanceTimersByTimeAsync(110);
+    expect(document.querySelector('#board-status')!.textContent).toBe(before);
   });
 
   it('merges to 2048, skips the win dialog, and searches the continued game', async () => {

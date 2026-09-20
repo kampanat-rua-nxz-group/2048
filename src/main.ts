@@ -117,7 +117,7 @@ const isLocked = () => {
   return renderer.isAnimating();
 };
 bindInput(window, isLocked, requestMove);
-bindSwipeInput(requireElement('.board'), isLocked, requestMove);
+bindSwipeInput(requireElement('#board-view'), isLocked, requestMove);
 botButton.addEventListener('click', () => {
   if (bot.isRunning()) bot.stop();
   else bot.start();

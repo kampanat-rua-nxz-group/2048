@@ -14,6 +14,22 @@ Play it on GitHub Pages at `https://kampanat-rua-nxz-group.github.io/2048/`.
 
 Your best score is kept in `localStorage`. If storage is unavailable, it lasts only for the session.
 
+## Bot
+
+Bot controls are invisible but remain clickable in their original position: the left side of the row between the New game toolbar and the board. Click there to start or stop the bot. It keeps playing beyond 2048 and stops at game over. An arrow/WASD key or **New game** also cancels it. A move already animating finishes before manual play resumes.
+
+The bot uses Expectimax: it considers all legal moves and averages the possible new tiles using the game's 90%/10% spawn probabilities. It searches progressively deeper with a 150 ms thinking budget per move, up to six moves ahead, and keeps the last completed search if time runs out. Cached row calculations and repeated positions reduce work. Its board evaluation rewards empty spaces, merge opportunities, and rows/columns ordered toward an edge. Search runs in a Web Worker so the controls remain responsive; it never reads future random values.
+
+Scores depend on tile spawns and device speed. To measure changes over seeded games without rendering:
+
+```sh
+# Number of games, thinking budget in milliseconds, maximum search depth
+npm run benchmark:bot -- 100 2 2
+npm run benchmark:bot -- 10 150 6
+```
+
+The benchmark reports score, largest tile, moves, average completed depth, and time per move for each seed, followed by aggregate results. Seeds fix the tile RNG; time-limited searches can still choose different moves on different runs or devices.
+
 ## Accessibility
 
 - A hidden live region reads the board state to screen readers after each move.
@@ -38,12 +54,14 @@ npm run dev
 | `npm run typecheck` | Type-check with `tsc --noEmit` |
 | `npm run build` | Type-check, then build to `dist/` |
 | `npm run preview` | Serve the production build |
+| `npm run benchmark:bot -- 10 5 6` | Run ten seeded bot games with a 5 ms search budget |
 
 ## Project structure
 
 ```
 src/
   game/        Pure, immutable game core: rules, board, RNG
+  bot/         Expectimax search, cached positions, worker, autoplay controller
   storage/     Best-score persistence
   ui/          Input, DOM renderer, overlay, screen-reader text
   ui/three/    Three.js stage, tiles, renderer, motion, palette
@@ -52,9 +70,11 @@ src/
 
 The game core never mutates state. `move(state, direction, rng)` returns a new `GameState` plus a list of `MoveEvent`s (`moved`, `merged`, `spawned`) keyed by tile id. Renderers animate those events and never reach into game logic, so the Three.js and DOM renderers can be swapped. `document.body.dataset.renderer` shows which one is active.
 
+`slide(state, direction)` simulates a move without spawning. The bot uses compact log2 positions and cached `slideLine` results for faster search; tests compare its moves with the game core.
+
 ## Testing
 
-Vitest runs in a Node environment, and tests that need a DOM switch to jsdom per file. Coverage is enforced at 80% for lines, functions, branches, and statements across `src/game`, `src/storage`, `src/ui/three/motion.ts`, and `src/ui/three/palette.ts`. The Three.js scene code is left out of the gate.
+Vitest runs in a Node environment, and tests that need a DOM switch to jsdom per file. Coverage is enforced at 80% for lines, functions, branches, and statements across `src/game`, `src/bot` (except the worker entry point), `src/storage`, `src/ui/three/motion.ts`, and `src/ui/three/palette.ts`. The Three.js scene code is left out of the gate.
 
 ## Deployment
 

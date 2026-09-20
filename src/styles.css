@@ -56,6 +56,11 @@ button {
 }
 button:hover { background: var(--well); }
 button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+button:disabled { opacity: 0.55; cursor: default; }
+
+.bot-toolbar { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; opacity: 0; }
+.bot-toolbar p { margin: 0; font-size: 14px; line-height: 1.4; }
+#toggle-bot[aria-pressed="true"] { background: var(--paper); color: var(--tray); }
 
 .board { position: relative; width: var(--board-size); aspect-ratio: 5 / 4; }
 .board:has(.grid) { aspect-ratio: auto; }

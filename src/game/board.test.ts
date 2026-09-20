@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { continueAfterWin, createGame, emptyCells, move, spawnTile } from './board';
+import { continueAfterWin, createGame, emptyCells, move, slide, spawnTile } from './board';
 import { seededRng, sequenceRng } from './rng';
 import type { Direction, GameState, Tile } from './types';
 
@@ -152,6 +152,24 @@ describe('move', () => {
   it('ignores moves once the game is over', () => {
     const state = stateFromGrid([[2, null]], { over: true });
     expect(move(state, 'right', sequenceRng([])).changed).toBe(false);
+  });
+});
+
+describe('slide', () => {
+  it('merges without spawning, leaving the input and tile identities intact', () => {
+    const state = stateFromGrid([[2, 2, 4, 4]], { score: 10 });
+    const snapshot = structuredClone(state);
+    const result = slide(state, 'left');
+    expect(gridFromState(result.state)).toEqual([
+      [4, 8, null, null],
+      [null, null, null, null],
+      [null, null, null, null],
+      [null, null, null, null],
+    ]);
+    expect(result.state.score).toBe(22);
+    expect(result.state.nextId).toBe(18);
+    expect(result.events.map((event) => event.kind)).toEqual(['merged', 'merged']);
+    expect(state).toEqual(snapshot);
   });
 });
 

@@ -1,4 +1,5 @@
 import './styles.css';
+import { createBotController, type BotStatus } from './bot/controller';
 import { continueAfterWin, createGame, move } from './game/board';
 import { defaultRng } from './game/rng';
 import type { Direction, GameState } from './game/types';
@@ -36,14 +37,36 @@ const overlay = createOverlay(requireElement('#overlay'), { onNewGame: newGame, 
 
 let state: GameState = createGame(defaultRng);
 let best = loadBestScore();
+const botButton = requireElement('#toggle-bot') as HTMLButtonElement;
+const botStatus = requireElement('#bot-status');
+const BOT_MESSAGES: Record<BotStatus, string> = {
+  idle: 'Let the bot play for a high score.',
+  running: 'Bot playing. Stop anytime to take over.',
+  over: 'Game over. Start a new game to play again.',
+  error: 'Bot stopped. Try again or play with the arrow keys.',
+};
+const bot = createBotController({
+  getState: () => state,
+  isAnimating: () => renderer.isAnimating(),
+  continueGame: keepGoing,
+  play: handleMove,
+  onStatus(status) {
+    const running = status === 'running';
+    botButton.textContent = running ? 'Stop bot' : 'Start bot';
+    botButton.setAttribute('aria-pressed', String(running));
+    botStatus.textContent = BOT_MESSAGES[status];
+  },
+}, () => new Worker(new URL('./bot/worker.ts', import.meta.url), { type: 'module' }));
 
 function renderText(): void {
   scoreEl.textContent = String(state.score);
   bestEl.textContent = String(best);
   statusEl.textContent = describeBoard(state);
+  botButton.disabled = state.over;
 }
 
 function newGame(): void {
+  bot.stop();
   state = createGame(defaultRng);
   overlay.hide();
   renderer.reset(state);
@@ -68,17 +91,31 @@ async function handleMove(dir: Direction): Promise<void> {
   }
   renderText();
 
-  await renderer.apply(result.events, dir);
+  try {
+    await renderer.apply(result.events, dir);
+  } catch (error) {
+    renderer.reset(state);
+    throw error;
+  }
   if (state !== result.state) return; // a new game started mid-animation
+  if (bot.isRunning() && state.won && !state.keepPlaying) keepGoing();
   const next = overlayFor(prev, state);
   if (next !== null) overlay.show(next);
 }
 
-bindInput(window, () => renderer.isAnimating(), (dir) => {
+bindInput(window, () => {
+  // A manual direction cancels pending search even while a tile is sliding.
+  if (bot.isRunning()) bot.stop();
+  return renderer.isAnimating();
+}, (dir) => {
   handleMove(dir).catch((error: unknown) => {
     reportError(error);
     renderer.reset(state);
   });
+});
+botButton.addEventListener('click', () => {
+  if (bot.isRunning()) bot.stop();
+  else bot.start();
 });
 requireElement('#new-game').addEventListener('click', newGame);
 newGame();

@@ -11,8 +11,8 @@ export default defineConfig(({ mode }) => ({
     environment: 'node',
     coverage: {
       provider: 'v8',
-      include: ['src/game/**/*.ts', 'src/storage/**/*.ts', 'src/ui/three/motion.ts', 'src/ui/three/palette.ts'],
-      exclude: ['**/*.test.ts'],
+      include: ['src/game/**/*.ts', 'src/bot/**/*.ts', 'src/storage/**/*.ts', 'src/ui/three/motion.ts', 'src/ui/three/palette.ts'],
+      exclude: ['**/*.test.ts', 'src/bot/worker.ts'],
       thresholds: { lines: 80, functions: 80, branches: 80, statements: 80 },
     },
   },

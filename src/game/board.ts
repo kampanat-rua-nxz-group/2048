@@ -51,7 +51,8 @@ function unchanged(state: GameState): MoveResult {
   return { state, events: [], changed: false };
 }
 
-export function move(state: GameState, dir: Direction, rng: Rng): MoveResult {
+/** Slides and merges without adding a random tile. Useful for examining possible moves. */
+export function slide(state: GameState, dir: Direction): MoveResult {
   if (state.over || (state.won && !state.keepPlaying)) return unchanged(state);
 
   const byCell = new Map(state.tiles.map((t) => [`${t.row},${t.col}`, t]));
@@ -88,6 +89,20 @@ export function move(state: GameState, dir: Direction, rng: Rng): MoveResult {
 
   if (!changed) return unchanged(state);
 
+  return {
+    state: { ...state, tiles, score: state.score + scoreDelta, nextId, won: state.won || hasWon(tiles), over: !canMove(tiles) },
+    events,
+    changed: true,
+  };
+}
+
+export function move(state: GameState, dir: Direction, rng: Rng): MoveResult {
+  const result = slide(state, dir);
+  if (!result.changed) return result;
+  const { tiles } = result.state;
+  let { nextId } = result.state;
+  const events = [...result.events];
+
   const spawned = spawnTile(tiles, nextId, rng);
   const finalTiles = spawned === null ? tiles : [...tiles, spawned];
   if (spawned !== null) {
@@ -97,10 +112,8 @@ export function move(state: GameState, dir: Direction, rng: Rng): MoveResult {
 
   return {
     state: {
+      ...result.state,
       tiles: finalTiles,
-      score: state.score + scoreDelta,
-      won: state.won || hasWon(finalTiles),
-      keepPlaying: state.keepPlaying,
       over: !canMove(finalTiles),
       nextId,
     },

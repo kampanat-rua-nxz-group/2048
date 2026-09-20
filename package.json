@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "benchmark:bot": "node scripts/benchmark-bot.mjs"
   },
   "dependencies": {
     "three": "0.186.0"

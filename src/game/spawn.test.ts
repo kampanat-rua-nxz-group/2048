@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { highestTile, spawnOdds, spawnValue, type SpawnOdds } from './spawn';
+import { fourProbability, highestTile, spawnOdds, spawnValue, type SpawnOdds } from './spawn';
 
-const valuesOf = (odds: readonly SpawnOdds[]): number[] => odds.map((odd) => odd.value);
 const probabilityOf = (odds: readonly SpawnOdds[], value: number): number =>
   odds.find((odd) => odd.value === value)?.probability ?? 0;
 
@@ -16,62 +15,68 @@ describe('highestTile', () => {
   });
 });
 
-describe('spawnOdds', () => {
-  it('spawns only 2s and 4s at 90/10 before the first rung', () => {
-    for (const highest of [0, 2, 512, 1024, 2047]) {
-      expect(spawnOdds(highest)).toEqual([
-        { value: 2, probability: 0.9 },
-        { value: 4, probability: 0.1 },
-      ]);
-    }
+describe('fourProbability', () => {
+  it.each([0, 2, 128, 512, 1024])('stays at 10%% while the largest tile is %i', (highest) => {
+    expect(fourProbability(highest)).toBe(0.1);
   });
 
   it.each([
-    [2048, [2, 4, 8]],
-    [4096, [2, 4, 8]],
-    [8192, [2, 4, 8, 16]],
-    [16384, [2, 4, 8, 16]],
-    [32768, [2, 4, 8, 16, 32]],
-    [131072, [2, 4, 8, 16, 32]],
-  ])('unlocks %i-tile spawns %j', (highest, expected) => {
-    expect(valuesOf(spawnOdds(highest))).toEqual(expected);
+    [2048, 0.15],
+    [4096, 0.2],
+    [8192, 0.25],
+  ])('climbs a step per doubling past the win: %i gives %f', (highest, expected) => {
+    expect(fourProbability(highest)).toBeCloseTo(expected, 10);
+  });
+
+  it.each([8192, 16384, 131072])('caps at 25%% from %i up', (highest) => {
+    expect(fourProbability(highest)).toBeCloseTo(0.25, 10);
+  });
+
+  it('never decreases as the board grows', () => {
+    const board = [0, 2, 1024, 2048, 4096, 8192, 16384, 65536];
+    const shares = board.map(fourProbability);
+    expect(shares).toEqual([...shares].sort((a, b) => a - b));
+  });
+});
+
+describe('spawnOdds', () => {
+  it('only ever offers a 2 or a 4', () => {
+    for (const highest of [0, 1024, 2048, 4096, 8192, 65536]) {
+      expect(spawnOdds(highest).map((odd) => odd.value)).toEqual([2, 4]);
+    }
   });
 
   it('keeps every distribution a probability distribution', () => {
-    for (const highest of [0, 2048, 8192, 32768]) {
+    for (const highest of [0, 1024, 2048, 4096, 8192, 65536]) {
       const odds = spawnOdds(highest);
       expect(odds.every((odd) => odd.probability > 0)).toBe(true);
       expect(odds.reduce((sum, odd) => sum + odd.probability, 0)).toBeCloseTo(1, 10);
     }
   });
 
-  it('takes the big spawns out of the small ones, keeping 2s nine times as likely as 4s', () => {
-    const odds = spawnOdds(8192);
-    expect(probabilityOf(odds, 8)).toBeCloseTo(0.08, 10);
-    expect(probabilityOf(odds, 16)).toBeCloseTo(0.04, 10);
-    expect(probabilityOf(odds, 2) + probabilityOf(odds, 4)).toBeCloseTo(0.88, 10);
-    expect(probabilityOf(odds, 2)).toBeCloseTo(9 * probabilityOf(odds, 4), 10);
-  });
-
-  it('makes small spawns rarer as the board grows', () => {
-    const smalls = [0, 2048, 8192, 32768].map((highest) => probabilityOf(spawnOdds(highest), 2));
-    expect(smalls).toEqual([...smalls].sort((a, b) => b - a));
-    expect(new Set(smalls).size).toBe(smalls.length);
+  it('trades 2s for 4s as the board grows', () => {
+    expect(probabilityOf(spawnOdds(1024), 2)).toBeCloseTo(0.9, 10);
+    expect(probabilityOf(spawnOdds(8192), 2)).toBeCloseTo(0.75, 10);
+    expect(probabilityOf(spawnOdds(8192), 4)).toBeCloseTo(0.25, 10);
   });
 });
 
 describe('spawnValue', () => {
-  const odds = spawnOdds(8192); // 2: 0.792, 4: 0.088, 8: 0.08, 16: 0.04
-
   it.each([
     [0, 2],
-    [0.791, 2],
-    [0.8, 4],
-    [0.88, 8],
-    [0.96, 16],
-    [0.999, 16],
-  ])('maps a roll of %f to %i', (roll, expected) => {
-    expect(spawnValue(odds, roll)).toBe(expected);
+    [0.89, 2],
+    [0.9, 4],
+    [0.999, 4],
+  ])('maps a roll of %f to %i before the win', (roll, expected) => {
+    expect(spawnValue(spawnOdds(1024), roll)).toBe(expected);
+  });
+
+  it.each([
+    [0.74, 2],
+    [0.76, 4],
+    [0.999, 4],
+  ])('maps a roll of %f to %i at the cap', (roll, expected) => {
+    expect(spawnValue(spawnOdds(8192), roll)).toBe(expected);
   });
 
   it('returns the last value when rounding leaves the buckets short of 1', () => {

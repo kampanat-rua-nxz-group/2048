@@ -10,7 +10,7 @@ Play it on GitHub Pages at `https://kampanat-rua-nxz-group.github.io/2048/`.
 - Two tiles with the same number merge into one tile with their sum, and the new value is added to your score.
 - After every move that changes the board, a new tile appears: at first a 2 (90%) or a 4 (10%).
 - Build a 2048 tile to win. You can then keep playing for a higher score.
-- Past the win, the spawns grow with the board: a 2048 tile starts dropping the occasional 8, 8192 adds 16s, and 32768 adds 32s, so a board that keeps growing keeps filling faster.
+- Past the win the 4s get more common: 15% once you build a 2048, 20% at 4096, then capped at 25% from 8192 up. Spawns are always a 2 or a 4.
 - The game ends when the board is full and no move can merge anything.
 
 Your best score is kept in `localStorage`. If storage is unavailable, it lasts only for the session.
@@ -19,7 +19,7 @@ Your best score is kept in `localStorage`. If storage is unavailable, it lasts o
 
 Bot controls are invisible but remain clickable in their original position: the left side of the row between the New game toolbar and the board. Click there to start or stop the bot. It keeps playing beyond 2048 and stops at game over. A swipe, an arrow/WASD key, or **New game** also cancels it. A move already animating finishes before manual play resumes.
 
-The bot uses Expectimax: it considers all legal moves and averages the possible new tiles using the game's own spawn odds, including the bigger tiles a grown board unlocks. It searches progressively deeper with a 150 ms thinking budget per move, up to six moves ahead, and keeps the last completed search if time runs out. Cached row calculations and repeated positions reduce work. Its board evaluation rewards empty spaces, merge opportunities, and rows/columns ordered toward an edge. Search runs in a Web Worker so the controls remain responsive; it never reads future random values.
+The bot uses Expectimax: it considers all legal moves and averages the possible new tiles using the game's own spawn odds, including the heavier share of 4s on a grown board. It searches progressively deeper with a 150 ms thinking budget per move, up to six moves ahead, and keeps the last completed search if time runs out. Cached row calculations and repeated positions reduce work. Its board evaluation rewards empty spaces, merge opportunities, and rows/columns ordered toward an edge. Search runs in a Web Worker so the controls remain responsive; it never reads future random values.
 
 Scores depend on tile spawns and device speed. To measure changes over seeded games without rendering:
 

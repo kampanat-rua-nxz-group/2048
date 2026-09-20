@@ -51,20 +51,18 @@ describe('spawnTile', () => {
     expect(spawnTile(full, 0, sequenceRng([]))).toBeNull();
   });
 
-  it('places an 8 once the board holds a 2048, on the roll a smaller board would read as a 4', () => {
-    const tiles = stateFromGrid([[2048, 2, null, null]]).tiles;
-    expect(spawnTile(tiles, 7, sequenceRng([0, 0.9]))).toMatchObject({ value: 4 });
-    expect(spawnTile(tiles, 7, sequenceRng([0, 0.95]))).toMatchObject({ value: 8 });
+  it('places a 4 on a roll a pre-win board would read as a 2, once the board holds a 2048', () => {
+    const won = stateFromGrid([[2048, 2, null, null]]).tiles;
+    const beforeWin = stateFromGrid([[1024, 2, null, null]]).tiles;
+    expect(spawnTile(beforeWin, 7, sequenceRng([0, 0.87]))).toMatchObject({ value: 2 });
+    expect(spawnTile(won, 7, sequenceRng([0, 0.87]))).toEqual({ id: 7, value: 4, row: 0, col: 2 });
   });
 
-  it('places a 16 once the board holds an 8192', () => {
-    const tiles = stateFromGrid([[8192, 2, null, null]]).tiles;
-    expect(spawnTile(tiles, 7, sequenceRng([0, 0.97]))).toEqual({ id: 7, value: 16, row: 0, col: 2 });
-  });
-
-  it('keeps big spawns locked until the winning tile shows up', () => {
-    const tiles = stateFromGrid([[1024, 2, null, null]]).tiles;
-    expect(spawnTile(tiles, 7, sequenceRng([0, 0.999]))).toMatchObject({ value: 4 });
+  it('never spawns anything but a 2 or a 4, however far the board has gone', () => {
+    const tiles = stateFromGrid([[65536, 2, null, null]]).tiles;
+    for (const roll of [0, 0.5, 0.74, 0.76, 0.999]) {
+      expect(spawnTile(tiles, 7, sequenceRng([0, roll]))?.value).toBeOneOf([2, 4]);
+    }
   });
 });
 
@@ -138,9 +136,9 @@ describe('move', () => {
   });
 
   it('spawns from the odds the slide leaves behind, not the ones it started with', () => {
-    // The merge lifts the board to 2048, which unlocks 8s for this move's spawn.
-    const result = move(stateFromGrid([[1024, 1024, null, null]], { keepPlaying: true }), 'left', sequenceRng([0, 0.95]));
-    expect(result.events.at(-1)).toMatchObject({ kind: 'spawned', value: 8 });
+    // The merge lifts the board to 2048, which lifts this move's own spawn to 15% fours.
+    const result = move(stateFromGrid([[1024, 1024, null, null]]), 'left', sequenceRng([0, 0.87]));
+    expect(result.events.at(-1)).toMatchObject({ kind: 'spawned', value: 4 });
   });
 
   it('sets won when a tile reaches 2048', () => {

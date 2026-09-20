@@ -69,16 +69,20 @@ describe('expectimax', () => {
     expect(chooseMove(tiles, { maxDepth: 1, timeMs: Infinity }).direction).toBe(expected);
   });
 
-  it('weighs the bigger spawns a grown board unlocks', () => {
-    // The 2048 here makes 8s possible, and sliding down leaves the board so tight
-    // that an 8 in the gap ends the game. A flat 90/10 cannot see that risk and
-    // picks down; pricing the unlocked 8s picks left instead.
-    const tiles = tilesFrom([512, 4, 2, 64, 32, 512, 16, 2048, 8, 0, 256, 8, 512, 256, 1024, 64]);
+  it('weighs the extra 4s a grown board spawns', () => {
+    // The 8192 here puts spawns at the 75/25 cap. Reweighting the same two values
+    // shifts every direction by a similar amount, so the ranking rarely flips --
+    // this position is one of the few where it does, by a narrow but real margin:
+    // a flat 90/10 prefers up by ~150, the capped odds prefer left by ~300.
+    const tiles = tilesFrom([512, 2048, 128, 4, 8, 512, 0, 4, 16, 1024, 4, 256, 32, 8192, 2, 32]);
     const state: GameState = { tiles, score: 0, nextId: 16, won: true, over: false, keepPlaying: true };
-    expect(spawnOdds(highestTile(tiles)).map((odd) => odd.value)).toEqual([2, 4, 8]);
+    expect(spawnOdds(highestTile(tiles))).toEqual([
+      { value: 2, probability: 0.75 },
+      { value: 4, probability: 0.25 },
+    ]);
 
     const flat: SpawnOdds[] = [{ value: 2, probability: 0.9 }, { value: 4, probability: 0.1 }];
-    expect(bestByOneTurnOracle(state, flat)).toBe('down');
+    expect(bestByOneTurnOracle(state, flat)).toBe('up');
     const expected = bestByOneTurnOracle(state);
     expect(expected).toBe('left');
     expect(chooseMove(tiles, { maxDepth: 1, timeMs: Infinity }).direction).toBe(expected);

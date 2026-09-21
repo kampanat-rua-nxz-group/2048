@@ -24,21 +24,17 @@ Each theme is a set of surfaces plus an eleven-step tile ramp in `src/ui/three/p
 
 Bot controls are invisible but remain clickable in their original position: the left side of the row between the New game toolbar and the board. Click there to start or stop the bot. It keeps playing beyond 2048 and stops at game over. A swipe, an arrow/WASD key, or **New game** also cancels it. A move already animating finishes before manual play resumes.
 
-The bot uses Expectimax: it considers all legal moves and averages the possible new tiles using the game's 90%/10% spawn probabilities. It searches progressively deeper with a 150 ms thinking budget per move, up to eight moves ahead, and keeps the last completed search if time runs out. Spawn sequences with a cumulative probability below 0.01% use the board evaluation instead of further search, leaving more time to look ahead along likely sequences. Cached row/column spawn expectations and repeated positions reduce work; cached search results account for the probability cutoff. Its board evaluation rewards empty spaces, merge opportunities, and rows/columns ordered toward an edge. Search runs in a Web Worker so the controls remain responsive; it never reads future random values. It continues playing through 8192, 16384, and 32768.
+The bot uses Expectimax: it considers all legal moves and averages the possible new tiles using the game's 90%/10% spawn probabilities. It searches progressively deeper with a 150 ms thinking budget per move, up to six moves ahead, and keeps the last completed search if time runs out. Cached row calculations and repeated positions reduce work. Its board evaluation rewards empty spaces, merge opportunities, and rows/columns ordered toward an edge. Search runs in a Web Worker so the controls remain responsive; it never reads future random values.
 
 Scores depend on tile spawns and device speed. To measure changes over seeded games without rendering:
 
 ```sh
-# Number of games, thinking budget in milliseconds, maximum search depth, probability cutoff
+# Number of games, thinking budget in milliseconds, maximum search depth
 npm run benchmark:bot -- 100 2 2
-npm run benchmark:bot -- 10 150 8
-# Reproducible, exhaustive search: fixed depth, no clock deadline or pruning
-npm run benchmark:bot -- 10 Infinity 2 0
+npm run benchmark:bot -- 10 150 6
 ```
 
-The benchmark reports score, largest tile, moves, average completed depth, and time per move for each seed, followed by aggregate results including counts reaching 8192, 16384, 32768, and 65536. The optional probability cutoff defaults to `0.0001`; `0` disables pruning. Seeds fix the tile RNG; time-limited searches can still choose different moves on different runs or devices. Larger tiles are targets, not guaranteed outcomes.
-
-The evaluation puts extra weight on available merges so the bot can free space while building larger tiles. Its weight balance is adapted from [nneonneo's 2048 AI](https://github.com/nneonneo/2048-ai/blob/master/2048.cpp). In a five-seed development comparison at 5 ms per move, tuning raised the average score from 67,519 to 89,021 and the best score from 113,484 to 156,160. Three games reached 8192, compared with one before tuning; none reached 16384 or 32768 in that small run. See [the benchmark record](docs/benchmarks/bot-tuning.md) for individual results and limitations.
+The benchmark reports score, largest tile, moves, average completed depth, and time per move for each seed, followed by aggregate results. Seeds fix the tile RNG; time-limited searches can still choose different moves on different runs or devices.
 
 ## Accessibility
 
@@ -65,7 +61,7 @@ npm run dev
 | `npm run typecheck` | Type-check with `tsc --noEmit` |
 | `npm run build` | Type-check, then build to `dist/` |
 | `npm run preview` | Serve the production build |
-| `npm run benchmark:bot -- 10 5 8` | Run ten seeded bot games with a 5 ms search budget |
+| `npm run benchmark:bot -- 10 5 6` | Run ten seeded bot games with a 5 ms search budget |
 
 ## Project structure
 

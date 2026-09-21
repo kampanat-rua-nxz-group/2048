@@ -4,13 +4,7 @@ import type { Direction, Tile } from '../game/types';
 /** Sixteen log2 tile values; zero denotes an empty cell. */
 export type Position = readonly number[];
 export type PositionMove = { readonly board: Position; readonly scoreDelta: number };
-type Row = {
-  readonly moved: readonly number[];
-  readonly scoreDelta: number;
-  readonly value: number;
-  readonly playable: boolean;
-  spawnDelta?: number;
-};
+type Row = { readonly moved: readonly number[]; readonly scoreDelta: number; readonly value: number; readonly playable: boolean };
 
 const rows = new Map<number, Row>();
 export const DIRECTIONS: readonly Direction[] = ['left', 'up', 'right', 'down'];
@@ -54,7 +48,7 @@ function rowInfo(board: Position, indices: readonly number[]): Row {
     scoreDelta: result.scoreDelta,
     // Empty space and merge opportunities keep play alive. Penalizing changes in
     // ordering pushes large tiles toward an edge; mass favors consolidating tiles.
-    value: 270 * empty + 1400 * pairs - 47 * Math.min(increasing, decreasing) - 11 * mass,
+    value: 250 * empty + 600 * pairs - 50 * Math.min(increasing, decreasing) - 10 * mass,
     playable: empty > 0 || pairs > 0,
   };
   if (rows.size >= 65536) rows.clear();
@@ -95,47 +89,4 @@ export function evaluate(board: Position): number {
     }
   }
   return playable ? value : -1e9;
-}
-
-/** Exact leaf expectation: a spawn changes only its row and column. */
-export function evaluateAfterSpawn(board: Position): number {
-  let empty = 0;
-  let lastEmpty = 0;
-  for (let cell = 0; cell < 16; cell += 1) {
-    if (board[cell] === 0) {
-      empty += 1;
-      lastEmpty = cell;
-    }
-  }
-  if (empty === 0) return evaluate(board);
-  // Filling the final space can end the game; the additive shortcut below is
-  // valid only when every possible spawn leaves at least one empty cell.
-  if (empty === 1) {
-    const spawned = [...board];
-    spawned[lastEmpty] = 1;
-    const two = evaluate(spawned);
-    spawned[lastEmpty] = 2;
-    return 0.9 * two + 0.1 * evaluate(spawned);
-  }
-  let value = 0;
-  for (const direction of ['left', 'up'] as const) {
-    for (const indices of lines[direction]) {
-      const row = rowInfo(board, indices);
-      if (row.spawnDelta === undefined) {
-        let delta = 0;
-        const spawned = [...board];
-        for (const cell of indices) {
-          if (board[cell] !== 0) continue;
-          spawned[cell] = 1;
-          delta += 0.9 * (rowInfo(spawned, indices).value - row.value);
-          spawned[cell] = 2;
-          delta += 0.1 * (rowInfo(spawned, indices).value - row.value);
-          spawned[cell] = 0;
-        }
-        row.spawnDelta = delta;
-      }
-      value += row.value + row.spawnDelta / empty;
-    }
-  }
-  return value;
 }

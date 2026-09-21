@@ -2,9 +2,10 @@ import { createServer } from 'vite';
 
 const games = Number(process.argv[2] ?? 10);
 const timeMs = Number(process.argv[3] ?? 5);
-const maxDepth = Number(process.argv[4] ?? 6);
-if (!Number.isInteger(games) || games < 1 || !Number.isFinite(timeMs) || timeMs < 0 || !Number.isInteger(maxDepth) || maxDepth < 1) {
-  throw new Error('Usage: npm run benchmark:bot -- <games >= 1> <ms per move >= 0> <depth >= 1>');
+const maxDepth = Number(process.argv[4] ?? 8);
+const minProbability = Number(process.argv[5] ?? 0.0001);
+if (!Number.isInteger(games) || games < 1 || Number.isNaN(timeMs) || timeMs < 0 || !Number.isInteger(maxDepth) || maxDepth < 1 || !Number.isFinite(minProbability) || minProbability < 0 || minProbability > 1) {
+  throw new Error('Usage: npm run benchmark:bot -- <games >= 1> <ms per move >= 0, or Infinity> <depth >= 1> <probability cutoff 0..1>');
 }
 const server = await createServer({ server: { middlewareMode: true, hmr: false, watch: null }, logLevel: 'error' });
 try {
@@ -20,7 +21,7 @@ try {
     const start = performance.now();
     while (!state.over) {
       if (state.won && !state.keepPlaying) state = continueAfterWin(state);
-      const result = chooseMove(state.tiles, { timeMs, maxDepth });
+      const result = chooseMove(state.tiles, { timeMs, maxDepth, minProbability });
       if (result.direction === null) throw new Error(`No move returned for live game, seed ${seed}`);
       const moved = move(state, result.direction, rng);
       if (!moved.changed) throw new Error(`Illegal move, seed ${seed}`);
@@ -36,11 +37,14 @@ try {
     console.log(JSON.stringify(result));
   }
   console.log(JSON.stringify({
-    games, timeMs, maxDepth,
+    games, timeMs: Number.isFinite(timeMs) ? timeMs : 'Infinity', maxDepth, minProbability,
     averageScore: Math.round(results.reduce((sum, result) => sum + result.score, 0) / games),
     bestScore: Math.max(...results.map((result) => result.score)),
     reached2048: results.filter((result) => result.tile >= 2048).length,
     reached8192: results.filter((result) => result.tile >= 8192).length,
+    reached16384: results.filter((result) => result.tile >= 16384).length,
+    reached32768: results.filter((result) => result.tile >= 32768).length,
+    reached65536: results.filter((result) => result.tile >= 65536).length,
   }));
 } finally {
   await server.close();

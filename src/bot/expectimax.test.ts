@@ -11,6 +11,22 @@ const tilesFrom = (values: number[]): Tile[] => values.flatMap((value, id) => (
 ));
 
 describe('expectimax', () => {
+  it('spends fewer nodes on rare spawn sequences while retaining the best move', () => {
+    const tiles = tilesFrom([16384, 8192, 4096, 2048, 256, 512, 1024, 1024, 128, 64, 32, 16, 0, 0, 2, 2]);
+    const exact = chooseMove(tiles, { maxDepth: 4, timeMs: Infinity, minProbability: 0 });
+    const pruned = chooseMove(tiles, { maxDepth: 4, timeMs: Infinity, minProbability: 0.01 });
+    expect(pruned.direction).toBe(exact.direction);
+    expect(pruned.depth).toBe(4);
+    expect(pruned.nodes).toBeLessThan(exact.nodes / 2);
+  });
+
+  it.each([8192, 16384, 32768])('builds a tile above %i when that is the only legal merge', (value) => {
+    const tiles = tilesFrom([value, value, 4, 2, 4, 2, 8, 4, 2, 4, 2, 8, 4, 2, 4, 2]);
+    const result = chooseMove(tiles, { maxDepth: 2, timeMs: Infinity });
+    const state: GameState = { tiles, score: 0, nextId: 16, won: true, over: false, keepPlaying: true };
+    expect(slide(state, result.direction!).state.tiles.some((tile) => tile.value === value * 2)).toBe(true);
+  });
+
   it('returns no move on a full board without adjacent equal tiles', () => {
     const tiles = tilesFrom([2, 4, 2, 4, 4, 2, 4, 2, 2, 4, 2, 4, 4, 2, 4, 2]);
     expect(chooseMove(tiles).direction).toBeNull();
@@ -39,8 +55,8 @@ describe('expectimax', () => {
   });
 
   it('chooses the best probability-weighted outcome, including 4 spawns', () => {
-    // Omitting 4s chooses left; reversing 90/10 chooses right. Correct odds choose up.
-    const tiles = tilesFrom([32, 64, 256, 32, 512, 8, 2, 64, 8, 256, 512, 2, 4, 8, 0, 2]);
+    // Omitting 4s chooses down; reversing 90/10 chooses right. Correct odds choose up.
+    const tiles = tilesFrom([256, 8, 2, 512, 512, 8, 16, 2, 4, 0, 32, 256, 512, 16, 64, 128]);
     const state: GameState = { tiles, score: 0, nextId: 16, won: false, over: false, keepPlaying: true };
     // Independent one-turn oracle uses the actual game engine and enumerates spawns.
     const scores = directions.map((direction) => {
